@@ -228,7 +228,7 @@ class JiraClient:
         # Initialize the text preprocessor for text processing capabilities
         self.preprocessor = JiraPreprocessor(
             base_url=self.config.url,
-            disable_translation=self.config.disable_jira_markup_translation,
+            disable_translation=self.config.resolve_disable_jira_markup_translation,
         )
         self._field_ids_cache = None
         self._current_user_account_id = None

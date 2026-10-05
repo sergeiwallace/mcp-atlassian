@@ -18,6 +18,7 @@ from ..utils.oauth import (
     get_oauth_config_from_env,
 )
 from ..utils.proxy import get_proxy_settings_from_env
+from ..utils.runtime_settings import get_runtime_override
 from ..utils.urls import is_atlassian_cloud_url
 
 logger = logging.getLogger("mcp-atlassian.jira.config")
@@ -229,6 +230,26 @@ class JiraConfig:
             The ssl_verify value
         """
         return self.ssl_verify
+
+    def resolve_disable_jira_markup_translation(self) -> bool:
+        """Resolve the markup translation setting as of right now.
+
+        A runtime overrides file, when one is configured, takes precedence over
+        the value this config was built with, so the setting can be changed
+        without restarting the server. See
+        :mod:`mcp_atlassian.utils.runtime_settings`.
+
+        Returns:
+            True when markup translation is disabled.
+
+        Raises:
+            RuntimeSettingsError: If a configured overrides file cannot be read
+                or parsed.
+        """
+        override = get_runtime_override("DISABLE_JIRA_MARKUP_TRANSLATION")
+        if override is not None:
+            return override.strip().lower() == "true"
+        return self.disable_jira_markup_translation
 
     @classmethod
     def from_env(cls) -> "JiraConfig":

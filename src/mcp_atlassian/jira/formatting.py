@@ -3,6 +3,7 @@
 import html
 import logging
 import re
+from collections.abc import Callable
 from typing import Any
 
 from ..preprocessing.jira import JiraPreprocessor
@@ -41,10 +42,16 @@ class FormattingMixin(
 
         # Use the JiraPreprocessor with the base URL from the client
         base_url = ""
-        disable_translation = False
+        disable_translation: bool | Callable[[], bool] = False
         if hasattr(self, "config") and hasattr(self.config, "url"):
             base_url = self.config.url
         if hasattr(self, "config") and hasattr(
+            self.config, "resolve_disable_jira_markup_translation"
+        ):
+            # Passed as a callable so a runtime overrides file can change the
+            # setting without rebuilding the client.
+            disable_translation = self.config.resolve_disable_jira_markup_translation
+        elif hasattr(self, "config") and hasattr(
             self.config, "disable_jira_markup_translation"
         ):
             disable_translation = self.config.disable_jira_markup_translation

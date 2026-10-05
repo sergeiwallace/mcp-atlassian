@@ -2,6 +2,7 @@
 
 import logging
 import re
+from collections.abc import Callable
 from typing import Any
 
 from .base import BasePreprocessor, _extract_blocks, _restore_blocks
@@ -106,18 +107,34 @@ class JiraPreprocessor(BasePreprocessor):
     }
 
     def __init__(
-        self, base_url: str = "", disable_translation: bool = False, **kwargs: Any
+        self,
+        base_url: str = "",
+        disable_translation: bool | Callable[[], bool] = False,
+        **kwargs: Any,
     ) -> None:
         """
         Initialize the Jira text preprocessor.
 
         Args:
             base_url: Base URL for Jira API
-            disable_translation: If True, disable markup translation between formats
+            disable_translation: If True, disable markup translation between
+                formats. A callable is consulted on every access instead, so
+                the setting can change while the server runs.
             **kwargs: Additional arguments for the base class
         """
         super().__init__(base_url=base_url, **kwargs)
-        self.disable_translation = disable_translation
+        self.disable_translation = disable_translation  # type: ignore[assignment]
+
+    @property
+    def disable_translation(self) -> bool:
+        """Whether markup translation is disabled, as of right now."""
+        if callable(self._disable_translation):
+            return self._disable_translation()
+        return self._disable_translation
+
+    @disable_translation.setter
+    def disable_translation(self, value: bool | Callable[[], bool]) -> None:
+        self._disable_translation = value
 
     def clean_jira_text(self, text: str) -> str:
         """
