@@ -163,6 +163,15 @@ disallow_untyped_defs = false
 module = "pypac.*"
 ignore_missing_imports = true
 
+# Pulled in by atlassian-python-api. Its current release uses a `type`
+# statement, which mypy rejects while checking against python_version 3.10,
+# so its source cannot be analysed here. Skipping the import keeps the
+# dependency usable without raising the project's own target version.
+[[tool.mypy.overrides]]
+module = "deprecated.*"
+follow_imports = "skip"
+ignore_missing_imports = true
+
 [tool.hatch.version]
 source = "uv-dynamic-versioning"
 
