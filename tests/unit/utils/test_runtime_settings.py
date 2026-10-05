@@ -56,6 +56,20 @@ class TestRuntimeSettings:
         assert settings.overrides() == {}
         assert settings.get("DISABLE_JIRA_MARKUP_TRANSLATION") is None
 
+    def test_a_tilde_path_is_expanded(self, tmp_path, monkeypatch):
+        """A literal `~` would name a directory that never exists.
+
+        Because a missing file means no overrides, leaving the tilde unexpanded would make a
+        tilde-spelled path fail open without a word.
+        """
+        monkeypatch.setenv("HOME", str(tmp_path))
+        _write(tmp_path / "overrides.env", "DISABLE_JIRA_MARKUP_TRANSLATION=true\n")
+
+        settings = RuntimeSettings("~/overrides.env")
+
+        assert settings.path == tmp_path / "overrides.env"
+        assert settings.get("DISABLE_JIRA_MARKUP_TRANSLATION") == "true"
+
     def test_a_key_with_no_value_is_rejected(self, tmp_path):
         """A malformed entry fails closed and the error names the file."""
         path = _write(tmp_path / "overrides.env", "DISABLE_JIRA_MARKUP_TRANSLATION\n")

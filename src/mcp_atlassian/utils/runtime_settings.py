@@ -48,7 +48,10 @@ class RuntimeSettings:
         Args:
             path: Path to the dotenv file holding the overrides.
         """
-        self._path = Path(path)
+        # Expand `~` here: a tilde path left literal would resolve to a relative `~` directory
+        # that never exists, and a missing file means "no overrides", so the misconfiguration
+        # would fail open without a word. Reading the configured file is the whole point.
+        self._path = Path(os.path.expanduser(path))
         self._stamp: tuple[int, int] | None = None
         self._overrides: Mapping[str, str] = _EMPTY
 
