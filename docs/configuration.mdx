@@ -219,6 +219,42 @@ JIRA_PROJECT_KEY_PATTERN=^[A-Z0-9][A-Z0-9_]*$
 
 See [.env.example](https://github.com/sooperset/mcp-atlassian/blob/main/.env.example) for all available options.
 
+### Content Processing
+
+| Variable | Description |
+|----------|-------------|
+| `DISABLE_JIRA_MARKUP_TRANSLATION` | Return Jira text as stored instead of converting between Jira markup and Markdown (`true`/`false`, default `false`) |
+
+### Runtime Settings Overrides
+
+Settings are normally read from the environment once, when the server starts, so
+changing one means restarting the server. A stdio server is started by its MCP
+client and lives for the whole session, which makes that restart disruptive.
+
+Set `MCP_ATLASSIAN_RUNTIME_ENV_FILE` to a dotenv file path to make the settings
+listed below resolvable per request instead. The file uses the same key names as
+the environment variables it overrides, and takes precedence over them, so the
+order is file, then environment, then the built-in default. Editing the file
+changes behaviour on the next request with no restart. The file is re-read only
+when its modification time or size changes.
+
+| Variable | Description |
+|----------|-------------|
+| `MCP_ATLASSIAN_RUNTIME_ENV_FILE` | Path to a dotenv file holding runtime overrides. Unset = no file is consulted. |
+
+Settings that honour the file today: `DISABLE_JIRA_MARKUP_TRANSLATION`.
+
+```bash
+# The file named by MCP_ATLASSIAN_RUNTIME_ENV_FILE
+DISABLE_JIRA_MARKUP_TRANSLATION=true
+```
+
+The path itself is read at startup and is not reloadable. A file that does not
+exist yields no overrides, which is the normal state when the feature is unused.
+A file that exists but cannot be read or parsed fails the affected request with
+an error naming the path, rather than falling back to the environment: serving
+the opposite of a configured value without saying so is the worse outcome.
+
 ### HTTP Hardening
 
 These optional safeguards are useful for protecting self-hosted Server/Data Center
